@@ -112,6 +112,7 @@ const CarritoDeCompras = () => {
               variant="contained"
               fullWidth
               size="large"
+              href='/checkout'
               startIcon={<ShoppingCartIcon />}
               sx={{
                 mt: 2,
