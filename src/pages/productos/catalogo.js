@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Drawer,
   List,
   ListItem,
   ListItemText,
@@ -10,57 +9,84 @@ import {
   CardContent,
   CardMedia,
   Grid,
+  Button,
+  CardActions,
 } from "@mui/material";
 import Carousel from "react-material-ui-carousel";
-import { set } from "react-hook-form";
-import { SocialDistance } from "@mui/icons-material";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 
 // Datos de ejemplo
-const subcategorias = ["Ofertas", "Nuevos", "Más vendidos", "Recomendados"];
 
 const CatalogoProdutos = () => {
-
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
   const [cards, setCards] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(categorias[0]);
+  const [subcategorias, setSubcategorias] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(
+    categorias[0]
+  );
+  const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] = useState(
+    subcategorias[0]
+  );
 
   useEffect(() => {
-    const fetchDatos = async () => {
-      try {
-        const [productosResponse, categoriasResponse] = await Promise.all([
-          fetch(
-          "http://localhost:3005/producto/mostrarProductos",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }),
-          fetch("http://localhost:3005/categoria/mostrarCategorias",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          })
-      ]);
-      if (!productosResponse.ok) {
-        throw new Error(`HTTP error! status: ${productosResponse.status}`);
-      }
+    var url = "";
 
+    const fetchDatos = async () => {
+      console.log(categoriaSeleccionada);
+      if (
+        typeof categoriaSeleccionada == "undefined" &&
+        typeof subcategoriaSeleccionada == "undefined"
+      ) {
+        url = "http://localhost:3005/producto/mostrarProductos";
+      } else if (typeof subcategoriaSeleccionada == "undefined") {
+        url = `http://localhost:3005/producto/mostrarProductos?categoria=${categoriaSeleccionada}`;
+      } else {
+        url = `http://localhost:3005/producto/mostrarProductos?categoria=${categoriaSeleccionada}&subcategoria=${subcategoriaSeleccionada}`;
+      }
+      try {
+        const [productosResponse, categoriasResponse, subcategoriaResponse] =
+          await Promise.all([
+            fetch(url, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }),
+            fetch("http://localhost:3005/categoria/mostrarCategorias", {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }),
+            fetch(
+              `http://localhost:3005/categoria/mostrarSubCategorias?categoria=${categoriaSeleccionada}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            ),
+          ]);
+        if (!productosResponse.ok) {
+          throw new Error(`HTTP error! status: ${productosResponse.status}`);
+        }
 
         if (!categoriasResponse.ok) {
           throw new Error(`HTTP error! status: ${categoriasResponse.status}`);
         }
-
+        if (!subcategoriaResponse.ok) {
+          throw new Error(`HTTP error! status: ${subcategoriaResponse.status}`);
+        }
 
         const productosData = await productosResponse.json();
         const categoriasData = await categoriasResponse.json();
+        const subcategoriasData = await subcategoriaResponse.json();
 
         const productosmap = productosData.map((producto) => ({
           id: producto.idProducto,
@@ -69,11 +95,16 @@ const CatalogoProdutos = () => {
           imagen: producto.ruta_img,
         }));
 
-        const categoriasmap = categoriasData.map((categoria) => categoria.nombre_categoria);
+        const categoriasmap = categoriasData.map(
+          (categoria) => categoria.nombre_categoria
+        );
+        const categoriasubmap = subcategoriasData.map(
+          (subcategoria) => subcategoria.subcategoria
+        );
 
         setCards(productosmap);
         setCategorias(categoriasmap);
-
+        setSubcategorias(categoriasubmap);
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -81,7 +112,12 @@ const CatalogoProdutos = () => {
       }
     };
     fetchDatos();
-  }, [token]); 
+  }, [token, categoriaSeleccionada, subcategoriaSeleccionada]);
+
+  const groupedSubcategories = [];
+  for (let i = 0; i < subcategorias.length; i += 5) {
+    groupedSubcategories.push(subcategorias.slice(i, i + 5));
+  }
 
   return (
     <Box
@@ -98,7 +134,7 @@ const CatalogoProdutos = () => {
       <Box
         sx={{
           gridArea: "1 / 1 / 7 / 2",
-          border :"5px",
+          border: "5px",
           p: 2,
           overflowY: "auto", // Permite desplazamiento si hay muchas categorías
         }}
@@ -130,25 +166,46 @@ const CatalogoProdutos = () => {
           p: 2,
         }}
       >
-        <Carousel 
-        sx={{ width: "100%"}}>
-          {subcategorias.map((subcategoria, index) => (
+        <Carousel sx={{ width: "100%" }}>
+          {groupedSubcategories.map((group, groupIndex) => (
             <Box
-              key={index}
+              key={groupIndex}
               sx={{
-                height: "100%",
                 display: "flex",
-                alignItems: "center",
                 justifyContent: "center",
-                bgcolor: "primary.main",
-                color: "white",
-                width:"100%"
+                alignItems: "center",
+                gap: 2,
+                width: "100%",
               }}
             >
-              <Typography variant="h4">{subcategoria}</Typography>
+              {group.map((subcategoria, index) => (
+                <ListItem
+                  button
+                  key={index}
+                  selected={subcategoria === subcategoriaSeleccionada}
+                  onClick={() => setSubcategoriaSeleccionada(subcategoria)}
+                >
+                  <Box
+                    key={index}
+                    sx={{
+                      flex: "1 1 20%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: "primary.main",
+                      color: "white",
+                      p: 2,
+                      textAlign: "center",
+                    }}
+                  >
+                    <Typography variant="h4">{subcategoria}</Typography>
+                  </Box>
+                </ListItem>
+              ))}
             </Box>
           ))}
         </Carousel>
+        ;
       </Box>
 
       {/* Productos en tarjetas (parte inferior derecha) */}
@@ -176,9 +233,20 @@ const CatalogoProdutos = () => {
                   <Typography gutterBottom variant="h5" component="div">
                     {producto.nombre}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {producto.precio}
-                  </Typography>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Typography variant="h6" color="text.secondary">
+                      {producto.precio}
+                    </Typography>
+                    <CardActions>
+                      <Button size="large">
+                        <AddShoppingCartIcon />
+                      </Button>
+                    </CardActions>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
