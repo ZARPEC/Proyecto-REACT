@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
@@ -22,6 +23,8 @@ function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     register,
     handleSubmit,
@@ -41,7 +44,9 @@ function LoginForm() {
       login(token);
       localStorage.setItem("token", token);
       console.log(token);
-      window.location.href = "/";
+      const from = location.state?.from?.pathname || "/";
+
+      navigate(from, { replace: true });
     } else {
       console.error("Error en la petición");
     }
