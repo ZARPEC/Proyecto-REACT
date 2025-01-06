@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext} from "react";
 import { useForm } from "react-hook-form";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
@@ -6,18 +6,22 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Button from "@mui/material/Button";
 import LoginIcon from "@mui/icons-material/Login";
-const { createIcons, icons } = "l";
+import { AuthContext } from "../context/AuthContext";
 
 // Creamos componentes wrapper para los iconos
 
 
 function LoginForm() {
+
+
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const { login } = useContext(AuthContext);
   const {
     register,
     handleSubmit,
@@ -34,8 +38,10 @@ function LoginForm() {
     if (response.ok) {
       const data = await response.json();
       const token = data.token;
+      login(token);
       localStorage.setItem("token", token);
       console.log(token);
+      window.location.href = "/";
     } else {
       console.error("Error en la petición");
     }
