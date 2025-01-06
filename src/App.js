@@ -5,6 +5,7 @@ import LoginForm from "./pages/login.js";
 import Categorias from "./pages/productos/categorias.js";
 import Productos from "./pages/productos/catalogo.js";
 import CarritoDeCompras from "./pages/productos/carrito.js";
+import Chechout from "./pages/checkout.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 
@@ -25,6 +26,14 @@ function App() {
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/carrito" element={<CarritoDeCompras />} />
+          <Route
+            path="/checkout"
+            element={
+              <PrivateRoute requiredRole="Cliente">
+                <Chechout />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>
