@@ -136,7 +136,7 @@ const CatalogoProdutos = () => {
           id: producto.idProducto,
           nombre: producto.nombre_producto,
           precio: producto.precio,
-          imagen: producto.ruta_img,
+          imagen: "/logo192.png", //producto.ruta_img
         }));
 
         const categoriasmap = categoriasData.map(
@@ -149,6 +149,8 @@ const CatalogoProdutos = () => {
         setCards(productosmap);
         setCategorias(categoriasmap);
         setSubcategorias(categoriasubmap);
+
+        url = "";
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -157,6 +159,15 @@ const CatalogoProdutos = () => {
     };
     fetchDatos();
   }, [token, categoriaSeleccionada, subcategoriaSeleccionada]);
+
+  const handleCategoriaClick = (categoria) => {
+    setCategoriaSeleccionada(categoria);
+    setSubcategoriaSeleccionada(undefined); // Restablece la subcategoría seleccionada
+  };
+
+  const handleSubcategoriaClick = (subcategoria) => {
+    setSubcategoriaSeleccionada(subcategoria);
+  };
 
   const groupedSubcategories = [];
   for (let i = 0; i < subcategorias.length; i += 5) {
@@ -188,7 +199,7 @@ const CatalogoProdutos = () => {
               button
               key={index}
               selected={categoria === categoriaSeleccionada}
-              onClick={() => setCategoriaSeleccionada(categoria)}
+              onClick={() => handleCategoriaClick(categoria)}
             >
               <ListItemText primary={categoria} />
             </ListItem>
@@ -225,7 +236,7 @@ const CatalogoProdutos = () => {
                   button
                   key={index}
                   selected={subcategoria === subcategoriaSeleccionada}
-                  onClick={() => setSubcategoriaSeleccionada(subcategoria)}
+                  onClick={() => handleSubcategoriaClick(subcategoria)}
                 >
                   <Box
                     key={index}
@@ -263,7 +274,12 @@ const CatalogoProdutos = () => {
               <Card>
                 <CardMedia
                   component="img"
-                  height="140"
+                  sx={{
+                    maxHeight: 150,
+                    width: "auto",
+                    margin: "0 auto", // Centra la imagen si es más pequeña
+                    display: "block",
+                  }}
                   image={card.imagen}
                   alt={card.nombre}
                 />
@@ -296,7 +312,8 @@ const CatalogoProdutos = () => {
                       variant="filled"
                       sx={{ width: "100%" }}
                     >
-                      {productoAgregado && `Se agregó al carrito el producto: ${productoAgregado}`}
+                      {productoAgregado &&
+                        `Se agregó al carrito el producto: ${productoAgregado}`}
                     </Alert>
                   </Snackbar>
                 </CardActions>
