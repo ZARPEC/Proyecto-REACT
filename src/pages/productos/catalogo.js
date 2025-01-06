@@ -12,10 +12,10 @@ import {
   Button,
   CardActions,
 } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 import Carousel from "react-material-ui-carousel";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-
-// Datos de ejemplo
 
 const CatalogoProdutos = () => {
   const [loading, setLoading] = useState(true);
@@ -29,12 +29,55 @@ const CatalogoProdutos = () => {
   const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] = useState(
     subcategorias[0]
   );
+  const [carrito, setCarrito] = useState(
+    JSON.parse(sessionStorage.getItem("carrito")) || []
+  );
+
+  const [open, setOpen] = React.useState(false);
+  const [productoAgregado, setProductoAgregado] = useState(null); // Nuevo estado
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
+
+  // Función para guardar el carrito en sessionStorage
+  const guardarCarrito = (nuevoCarrito) => {
+    sessionStorage.setItem("carrito", JSON.stringify(nuevoCarrito));
+    setCarrito(nuevoCarrito);
+  };
+
+  // Función para agregar al carrito
+  const agregarAlCarrito = (producto) => {
+    const existeProducto = carrito.find((item) => item.id === producto.id);
+    let nuevoCarrito;
+
+    if (existeProducto) {
+      nuevoCarrito = carrito.map((item) =>
+        item.id === producto.id
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      );
+    } else {
+      nuevoCarrito = [...carrito, { ...producto, cantidad: 1 }];
+    }
+
+    guardarCarrito(nuevoCarrito);
+    setProductoAgregado(producto.nombre); // Establecer el nombre del producto
+    handleClick();
+  };
 
   useEffect(() => {
     var url = "";
 
     const fetchDatos = async () => {
-      console.log(categoriaSeleccionada);
       if (
         typeof categoriaSeleccionada == "undefined" &&
         typeof subcategoriaSeleccionada == "undefined"
@@ -73,6 +116,7 @@ const CatalogoProdutos = () => {
               }
             ),
           ]);
+
         if (!productosResponse.ok) {
           throw new Error(`HTTP error! status: ${productosResponse.status}`);
         }
@@ -91,7 +135,7 @@ const CatalogoProdutos = () => {
         const productosmap = productosData.map((producto) => ({
           id: producto.idProducto,
           nombre: producto.nombre_producto,
-          precio: "Q" + producto.precio,
+          precio: producto.precio,
           imagen: producto.ruta_img,
         }));
 
@@ -127,16 +171,15 @@ const CatalogoProdutos = () => {
         gridTemplateRows: "repeat(6, 1fr)",
         gridColumnGap: "0px",
         gridRowGap: "0px",
-        height: "100vh", // Ajustar a la altura completa de la ventana
+        height: "100vh",
       }}
     >
-      {/* Lista de categorías (lado izquierdo) */}
       <Box
         sx={{
           gridArea: "1 / 1 / 7 / 2",
           border: "5px",
           p: 2,
-          overflowY: "auto", // Permite desplazamiento si hay muchas categorías
+          overflowY: "auto",
         }}
       >
         <List>
@@ -153,7 +196,6 @@ const CatalogoProdutos = () => {
         </List>
       </Box>
 
-      {/* Carrusel de subcategorías (parte superior derecha) */}
       <Box
         sx={{
           gridArea: "1 / 2 / 3 / 5",
@@ -208,46 +250,56 @@ const CatalogoProdutos = () => {
         ;
       </Box>
 
-      {/* Productos en tarjetas (parte inferior derecha) */}
       <Box
         sx={{
           gridArea: "2 / 2 / 7 / 5",
-          p: 3,
-          overflowY: "auto", // Permite desplazamiento si hay muchos productos
+          p: 2,
+          overflowY: "auto",
         }}
       >
-        <Typography variant="h4" sx={{ mb: 2 }}>
-          Productos en {categoriaSeleccionada}
-        </Typography>
-        <Grid container spacing={3}>
-          {cards.map((producto) => (
-            <Grid item xs={12} sm={6} md={4} key={producto.id}>
+        <Grid container spacing={2}>
+          {cards.map((card, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
               <Card>
                 <CardMedia
                   component="img"
                   height="140"
-                  image={producto.imagen}
-                  alt={producto.nombre}
+                  image={card.imagen}
+                  alt={card.nombre}
                 />
                 <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {producto.nombre}
+                  <Typography variant="h6" component="div">
+                    {card.nombre}
                   </Typography>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography variant="h6" color="text.secondary">
-                      {producto.precio}
-                    </Typography>
-                    <CardActions>
-                      <Button size="large">
-                        <AddShoppingCartIcon />
-                      </Button>
-                    </CardActions>
-                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Precio: Q{card.precio.toFixed(2)}
+                  </Typography>
                 </CardContent>
+                <CardActions>
+                  <Button
+                    size="small"
+                    startIcon={<AddShoppingCartIcon />}
+                    onClick={() => {
+                      agregarAlCarrito(card);
+                    }}
+                  >
+                    Agregar al Carrito
+                  </Button>
+                  <Snackbar
+                    open={open}
+                    autoHideDuration={6000}
+                    onClose={handleClose}
+                  >
+                    <Alert
+                      onClose={handleClose}
+                      severity="success"
+                      variant="filled"
+                      sx={{ width: "100%" }}
+                    >
+                      {productoAgregado && `Se agregó al carrito el producto: ${productoAgregado}`}
+                    </Alert>
+                  </Snackbar>
+                </CardActions>
               </Card>
             </Grid>
           ))}
