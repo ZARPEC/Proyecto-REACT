@@ -117,7 +117,7 @@ function Navbar() {
 
           {!isAuthenticated ? (
             <Box>
-              <Button>
+              <Button href="/carrito">
                 <ShoppingCartIcon sx={{ fontSize: 40, color: "white" }} />
               </Button>
               <Button color="inherit" href="/login">
@@ -126,7 +126,7 @@ function Navbar() {
             </Box>
           ) : (
             <Box sx={{ flexGrow: 0 }}>
-              <Button>
+              <Button href="/carrito">
                 <ShoppingCartIcon sx={{ fontSize: 40, color: "white" }} />
               </Button>
               <Tooltip title="Open settings">
