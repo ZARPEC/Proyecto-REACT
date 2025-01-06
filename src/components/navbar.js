@@ -22,7 +22,7 @@ const pages = [
   { label: "Sobre Nosotros", href: "/sobre-nosotros" },
 ];
 
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const settings = [ "Cuenta", "Pedidos", "Cerrar sesión" ];
 
 function Navbar() {
   const { isAuthenticated, logout } = useContext(AuthContext);
