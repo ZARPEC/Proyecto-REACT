@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -15,6 +15,7 @@ import StoreIcon from "@mui/icons-material/Store";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link } from "@mui/material";
 import { AuthContext } from "../context/AuthContext"; // Ajusta el path según tu estructura
+import { useNavigate } from "react-router-dom";
 
 const pages = [
   { label: "Productos", href: "/productos" },
@@ -22,16 +23,32 @@ const pages = [
   { label: "Sobre Nosotros", href: "/sobre-nosotros" },
 ];
 
-const settings = [ "Cuenta", "Pedidos", "Cerrar sesión" ];
+const pagesAdmin = [
+  { label: "Productos", href: "/productos" },
+  { label: "Categorías", href: "/categorias" },
+  { label: "Administrar producto", href: "/administrar" },
+  { label: "usuarios", href: "/UsuariosAdmin" },
+  { label: "pedidos Cliente", href: "/pedidos" },
+];
+
+const settings = ["Cuenta", "Pedidos", "Cerrar sesión"];
 
 function Navbar() {
   const { isAuthenticated, logout } = useContext(AuthContext);
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [requiredRole, setRequiredRole] = useState(null); // Estado para el rol
+
+  // Obtener el rol de localStorage
+  useEffect(() => {
+    const role = localStorage.getItem("rol"); // Suponiendo que el rol está guardado con el nombre "rol"
+    setRequiredRole(role); // Establece el rol en el estado
+  }, []);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
+
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -46,6 +63,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
+    localStorage.removeItem("rol"); // Puedes eliminar el rol de localStorage al cerrar sesión
   };
 
   return (
@@ -92,27 +110,72 @@ function Navbar() {
               onClose={handleCloseNavMenu}
               sx={{ display: { xs: "block", md: "none" } }}
             >
-              {pages.map((page) => (
+              {isAuthenticated ? (
+                <>
+                  {requiredRole === "Cliente"
+                    ? pages.map((page) => (
+                        <MenuItem key={page.label} onClick={handleCloseNavMenu}>
+                          <Link
+                            href={page.href}
+                            underline="none"
+                            color="inherit"
+                          >
+                            <Typography>{page.label}</Typography>
+                          </Link>
+                        </MenuItem>
+                      ))
+                    : pagesAdmin.map((page) => (
+                        <MenuItem key={page.label} onClick={handleCloseNavMenu}>
+                          <Link
+                            href={page.href}
+                            underline="none"
+                            color="inherit"
+                          >
+                            <Typography>{page.label}</Typography>
+                          </Link>
+                        </MenuItem>
+                      ))}
+                </>
+              ) : (
+                pages.map((page) => (
+                  <MenuItem key={page.label} onClick={handleCloseNavMenu}>
+                    <Link href={page.href} underline="none" color="inherit">
+                      <Typography>{page.label}</Typography>
+                    </Link>
+                  </MenuItem>
+                ))
+              )}
+            </Menu>
+          </Box>
+
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+            {isAuthenticated ? (
+              <>
+                {requiredRole === "Cliente"
+                  ? pages.map((page) => (
+                      <MenuItem key={page.label} onClick={handleCloseNavMenu}>
+                        <Link href={page.href} underline="none" color="inherit">
+                          <Typography>{page.label}</Typography>
+                        </Link>
+                      </MenuItem>
+                    ))
+                  : pagesAdmin.map((page) => (
+                      <MenuItem key={page.label} onClick={handleCloseNavMenu}>
+                        <Link href={page.href} underline="none" color="inherit">
+                          <Typography>{page.label}</Typography>
+                        </Link>
+                      </MenuItem>
+                    ))}
+              </>
+            ) : (
+              pages.map((page) => (
                 <MenuItem key={page.label} onClick={handleCloseNavMenu}>
                   <Link href={page.href} underline="none" color="inherit">
                     <Typography>{page.label}</Typography>
                   </Link>
                 </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            {pages.map((page) => (
-              <Button
-                key={page.label}
-                sx={{ my: 2, color: "white", display: "block" }}
-              >
-                <Link href={page.href} underline="none" color="inherit">
-                  {page.label}
-                </Link>
-              </Button>
-            ))}
+              ))
+            )}
           </Box>
 
           {!isAuthenticated ? (
@@ -154,7 +217,7 @@ function Navbar() {
                   <MenuItem
                     key={setting}
                     onClick={() => {
-                      if (setting === "Logout") {
+                      if (setting === "Cerrar sesión") {
                         handleLogout(); // Llama a la función de logout si es "Logout"
                       }
                       handleCloseUserMenu(); // Cierra el menú después de cualquier acción
