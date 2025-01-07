@@ -23,11 +23,13 @@ function CrudUsuarios() {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [filtro, setFiltro] = useState("activo");
   const [formData, setFormData] = useState({
+
     rol: "",
     estado: "",
     email: "",
-    pass:"",
+    pass: "",
     nombre: "",
     apellido: "",
     telefono: "",
@@ -41,7 +43,7 @@ function CrudUsuarios() {
       rol: "",
       estado: "",
       email: "",
-      pass:"",
+      pass: "",
       nombre: "",
       apellido: "",
       telefono: "",
@@ -63,17 +65,19 @@ function CrudUsuarios() {
       [name]: value,
     }));
   };
+  const handlefiltro =(filtro)=>{
+    setFiltro(filtro);
+  }
 
   // Crear o editar un usuario
   const handleSubmit = async () => {
-    
     try {
       const url = editOpen
         ? "http://localhost:3005/usuario/modificarUsuario"
         : "http://localhost:3005/usuario/agregarUsuario";
 
       const response = await fetch(url, {
-        method:"POST",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -88,19 +92,16 @@ function CrudUsuarios() {
           apellido: formData.apellido,
           telefono: formData.telefono,
           nacimiento: formData.nacimiento,
-        
         }),
-        
       });
 
       if (!response.ok) {
         throw new Error(`Error al ${editOpen ? "editar" : "crear"} usuario.`);
-        
       }
 
       console.log(formData);
       const updatedUser = await response.json();
-      const nuevoUsuario= {...formData, idUsuario: updatedUser.id};
+      const nuevoUsuario = { ...formData, idUsuario: updatedUser.id };
       if (editOpen) {
         setUsers(
           users.map((user) =>
@@ -125,7 +126,8 @@ function CrudUsuarios() {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-        },body: JSON.stringify({ idCliente:idUsuario, estado_fk: 3 })
+        },
+        body: JSON.stringify({ idCliente: idUsuario, estado_fk: 3 }),
       });
 
       if (!response.ok) {
@@ -141,8 +143,13 @@ function CrudUsuarios() {
   // Cargar usuarios desde la API
   useEffect(() => {
     const fetchUsers = async () => {
+      var url="";
+      if(filtro==="activo"){
+        url = "http://localhost:3005/cliente/mostrarClientes";
+      }else if(filtro==="inactivo"){
+        url = "http://localhost:3005/cliente/mostrarClientes?estado=Inactivos";
+      }
       try {
-        const url = "http://localhost:3005/cliente/mostrarClientes";
         const response = await fetch(url, {
           method: "GET",
           headers: {
@@ -162,108 +169,130 @@ function CrudUsuarios() {
       }
     };
     fetchUsers();
-  }, [token]);
+  }, [token,filtro]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleClickOpen}
-        style={{ marginBottom: "20px" }}
-      >
-        Crear Nuevo Usuario
-      </Button>
+    <div
+      style={{
+        padding: "20px",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Acciones</TableCell>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Apellido</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Teléfono</TableCell>
-              <TableCell>Rol</TableCell>
-              <TableCell>Estado</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.idUsuario}>
-                <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      setCurrentUser(user);
-                      setFormData(user);
-                      setEditOpen(true);
-                    }}
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDelete(user.idUsuario)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-                <TableCell>{user.nombre}</TableCell>
-                <TableCell>{user.apellido}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.telefono}</TableCell>
-                <TableCell>{user.nombreRol}</TableCell>
-                <TableCell>{user.nombreEstado}</TableCell>
+      }}
+    >
+      <div style={{ width: "75" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleClickOpen}
+          style={{ marginBottom: "20px",marginRight: "20px"  }}
+        >
+          Crear Nuevo Usuario
+        </Button >
+        <Button variant="contained"
+          color="primary"
+          onClick={() => handlefiltro("inactivo")}
+          style={{ marginBottom: "20px",marginRight: "20px" }}>
+            Usuarios Inactivos
+          </Button>
+        <Button variant="contained"
+          color="primary"
+          onClick={() => handlefiltro("activo")}
+          style={{ marginBottom: "20px",marginRight: "20px"  }}>
+            Usuarios Activos
+          </Button>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Acciones</TableCell>
+                <TableCell>Nombre</TableCell>
+                <TableCell>Apellido</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Teléfono</TableCell>
+                <TableCell>Rol</TableCell>
+                <TableCell>Estado</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.idUsuario}>
+                  <TableCell>
+                    <IconButton
+                      onClick={() => {
+                        setCurrentUser(user);
+                        setFormData(user);
+                        setEditOpen(true);
+                      }}
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(user.idUsuario)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>{user.nombre}</TableCell>
+                  <TableCell>{user.apellido}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.telefono}</TableCell>
+                  <TableCell>{user.nombreRol}</TableCell>
+                  <TableCell>{user.nombreEstado}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Diálogo para crear/editar usuarios */}
-      <Dialog open={open || editOpen} onClose={handleClose}>
-        <DialogTitle>
-          {editOpen ? "Editar Usuario" : "Crear Usuario"}
-        </DialogTitle>
-        <DialogContent>
-          {[
-            "nombre",
-            "apellido",
-            "email",
-            "pass",
-            "telefono",
-            "rol",
-            "estado",
-            "nacimiento",
-          ].map((field) => (
-            <TextField
-              key={field}
-              margin="dense"
-              name={field}
-              label={field.charAt(0).toUpperCase() + field.slice(1)}
-              type={
-                field === "nacimiento"
-                  ? "date"
-                  : field === "rol" || field === "estado"
-                  ? "number"
-                  : "text"
-              }
-              fullWidth
-              value={formData[field] || ""}
-              onChange={handleInputChange}
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} color="primary">
-            {editOpen ? "Guardar" : "Crear"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {/* Diálogo para crear/editar usuarios */}
+        <Dialog open={open || editOpen} onClose={handleClose}>
+          <DialogTitle>
+            {editOpen ? "Editar Usuario" : "Crear Usuario"}
+          </DialogTitle>
+          <DialogContent>
+            {[
+              "nombre",
+              "apellido",
+              "email",
+              "pass",
+              "telefono",
+              "rol",
+              "estado",
+              "nacimiento",
+            ].map((field) => (
+              <TextField
+                key={field}
+                margin="dense"
+                name={field}
+                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                type={
+                  field === "nacimiento"
+                    ? "date"
+                    : field === "rol" || field === "estado"
+                    ? "number"
+                    : "text"
+                }
+                fullWidth
+                value={formData[field] || ""}
+                onChange={handleInputChange}
+              />
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit} color="primary">
+              {editOpen ? "Guardar" : "Crear"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
     </div>
   );
 }
