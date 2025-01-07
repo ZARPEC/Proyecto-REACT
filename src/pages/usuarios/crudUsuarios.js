@@ -66,19 +66,20 @@ function CrudUsuarios() {
 
   // Crear o editar un usuario
   const handleSubmit = async () => {
+    
     try {
       const url = editOpen
-        ? "http://localhost:3005/usuario/editarUsuario"
+        ? "http://localhost:3005/usuario/modificarUsuario"
         : "http://localhost:3005/usuario/agregarUsuario";
-      const method = editOpen ? "PUT" : "POST";
 
       const response = await fetch(url, {
-        method,
+        method:"POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          idUsuario: formData.idUsuario,
           rol: formData.rol,
           estado: formData.estado,
           email: formData.email,
@@ -94,17 +95,20 @@ function CrudUsuarios() {
 
       if (!response.ok) {
         throw new Error(`Error al ${editOpen ? "editar" : "crear"} usuario.`);
+        
       }
+
       console.log(formData);
       const updatedUser = await response.json();
+      const nuevoUsuario= {...formData, idUsuario: updatedUser.id};
       if (editOpen) {
         setUsers(
           users.map((user) =>
-            user.idUsuario === updatedUser.idUsuario ? updatedUser : user
+            user.idUsuario === updatedUser.idUsuario ? nuevoUsuario : user
           )
         );
       } else {
-        setUsers([...users, updatedUser]);
+        setUsers([...users, nuevoUsuario]);
       }
       handleClose();
     } catch (error) {
@@ -115,13 +119,13 @@ function CrudUsuarios() {
   // Eliminar un usuario
   const handleDelete = async (idUsuario) => {
     try {
-      const url = `http://localhost:3005/usuario/eliminarUsuario/${idUsuario}`;
+      const url = `http://localhost:3005/cliente/modificarEstadoCliente`;
       const response = await fetch(url, {
-        method: "DELETE",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-        },
+        },body: JSON.stringify({ idCliente:idUsuario, estado_fk: 3 })
       });
 
       if (!response.ok) {
