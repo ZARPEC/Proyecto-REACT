@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -13,33 +13,39 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  IconButton
-} from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+  IconButton,
+} from "@mui/material";
+import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 
 function CrudUsuarios() {
-  const [users, setUsers] = useState([
-    { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', phone: '123-456-7890', status: 'Active' }
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const token = localStorage.getItem("token");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    status: 'Active'
+    rol: "",
+    estado: "",
+    email: "",
+    pass:"",
+    nombre: "",
+    apellido: "",
+    telefono: "",
+    nacimiento: "",
   });
 
+  // Manejo de apertura y cierre de diálogos
   const handleClickOpen = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      status: 'Active'
+      idUsuario: "",
+      rol: "",
+      estado: "",
+      email: "",
+      pass:"",
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      nacimiento: "",
     });
     setOpen(true);
   };
@@ -49,143 +55,213 @@ function CrudUsuarios() {
     setEditOpen(false);
   };
 
-  const handleEditClick = (user) => {
-    setCurrentUser(user);
-    setFormData(user);
-    setEditOpen(true);
-  };
-
+  // Actualizar el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = () => {
-    if (editOpen) {
-      setUsers(users.map(user => 
-        user.id === currentUser.id ? { ...formData, id: user.id } : user
-      ));
-    } else {
-      setUsers([...users, { ...formData, id: Math.random().toString(36).substr(2, 9) }]);
+  // Crear o editar un usuario
+  const handleSubmit = async () => {
+    try {
+      const url = editOpen
+        ? "http://localhost:3005/usuario/editarUsuario"
+        : "http://localhost:3005/usuario/agregarUsuario";
+      const method = editOpen ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rol: formData.rol,
+          estado: formData.estado,
+          email: formData.email,
+          pass: formData.pass,
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          telefono: formData.telefono,
+          nacimiento: formData.nacimiento,
+        
+        }),
+        
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al ${editOpen ? "editar" : "crear"} usuario.`);
+      }
+      console.log(formData);
+      const updatedUser = await response.json();
+      if (editOpen) {
+        setUsers(
+          users.map((user) =>
+            user.idUsuario === updatedUser.idUsuario ? updatedUser : user
+          )
+        );
+      } else {
+        setUsers([...users, updatedUser]);
+      }
+      handleClose();
+    } catch (error) {
+      console.error("Error al guardar el usuario:", error);
     }
-    handleClose();
   };
 
-  const handleDelete = (id) => {
-    setUsers(users.filter(user => user.id !== id));
+  // Eliminar un usuario
+  const handleDelete = async (idUsuario) => {
+    try {
+      const url = `http://localhost:3005/usuario/eliminarUsuario/${idUsuario}`;
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el usuario.");
+      }
+
+      setUsers(users.filter((user) => user.idUsuario !== idUsuario));
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+    }
   };
+
+  // Cargar usuarios desde la API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const url = "http://localhost:3005/cliente/mostrarClientes";
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Error al cargar usuarios.");
+        }
+
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error("Error al cargar usuarios:", error);
+      }
+    };
+    fetchUsers();
+  }, [token]);
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: "20px" }}>
       <Button
         variant="contained"
         color="primary"
         onClick={handleClickOpen}
-        style={{ marginBottom: '20px' }}
+        style={{ marginBottom: "20px" }}
       >
-        Create New User
+        Crear Nuevo Usuario
       </Button>
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Actions</TableCell>
-              <TableCell>First Name</TableCell>
-              <TableCell>Last Name</TableCell>
+              <TableCell>Acciones</TableCell>
+              <TableCell>Nombre</TableCell>
+              <TableCell>Apellido</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Teléfono</TableCell>
+              <TableCell>Rol</TableCell>
+              <TableCell>Estado</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow key={user.idUsuario}>
                 <TableCell>
-                  <IconButton onClick={() => handleEditClick(user)} color="primary">
+                  <IconButton
+                    onClick={() => {
+                      setCurrentUser(user);
+                      setFormData(user);
+                      setEditOpen(true);
+                    }}
+                    color="primary"
+                  >
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(user.id)} color="error">
+                  <IconButton
+                    onClick={() => handleDelete(user.idUsuario)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
-                <TableCell>{user.firstName}</TableCell>
-                <TableCell>{user.lastName}</TableCell>
+                <TableCell>{user.nombre}</TableCell>
+                <TableCell>{user.apellido}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell>{user.status}</TableCell>
+                <TableCell>{user.telefono}</TableCell>
+                <TableCell>{user.nombreRol}</TableCell>
+                <TableCell>{user.nombreEstado}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Create/Edit Dialog */}
+      {/* Diálogo para crear/editar usuarios */}
       <Dialog open={open || editOpen} onClose={handleClose}>
-        <DialogTitle>{editOpen ? 'Edit User' : 'Create New User'}</DialogTitle>
+        <DialogTitle>
+          {editOpen ? "Editar Usuario" : "Crear Usuario"}
+        </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            name="firstName"
-            label="First Name"
-            type="text"
-            fullWidth
-            value={formData.firstName}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="lastName"
-            label="Last Name"
-            type="text"
-            fullWidth
-            value={formData.lastName}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="email"
-            label="Email"
-            type="email"
-            fullWidth
-            value={formData.email}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="phone"
-            label="Phone"
-            type="tel"
-            fullWidth
-            value={formData.phone}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="status"
-            label="Status"
-            type="text"
-            fullWidth
-            value={formData.status}
-            onChange={handleInputChange}
-          />
+          {[
+            "nombre",
+            "apellido",
+            "email",
+            "pass",
+            "telefono",
+            "rol",
+            "estado",
+            "nacimiento",
+          ].map((field) => (
+            <TextField
+              key={field}
+              margin="dense"
+              name={field}
+              label={field.charAt(0).toUpperCase() + field.slice(1)}
+              type={
+                field === "nacimiento"
+                  ? "date"
+                  : field === "rol" || field === "estado"
+                  ? "number"
+                  : "text"
+              }
+              fullWidth
+              value={formData[field] || ""}
+              onChange={handleInputChange}
+            />
+          ))}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
-            Cancel
+            Cancelar
           </Button>
           <Button onClick={handleSubmit} color="primary">
-            {editOpen ? 'Save' : 'Create'}
+            {editOpen ? "Guardar" : "Crear"}
           </Button>
         </DialogActions>
       </Dialog>
     </div>
   );
 }
-
 
 export default CrudUsuarios;
