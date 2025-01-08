@@ -201,7 +201,7 @@ function CrudUsuarios() {
         </Button>
         <Button
           variant="contained"
-          color="primary"
+          color="secondary"
           onClick={() => handlefiltro("inactivo")}
           style={{ marginBottom: "20px", marginRight: "20px" }}
         >
