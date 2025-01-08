@@ -30,6 +30,7 @@ function CrudProductos() {
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [subcategorias, setSubcategorias] = useState([]);
+  const [unidadesMedida, setUnidadesMedida] = useState([]);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [currentProducto, setCurrentProducto] = useState(null);
@@ -69,6 +70,23 @@ function CrudProductos() {
   }, [token]);
 
   useEffect(() => {
+    const fetchUnidadesMedida = async () => {
+        try {
+            const response = await axios.get(
+            "http://localhost:3005/unidadmedida/mostrarUnidadMedida",
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+            );
+            setUnidadesMedida(response.data);
+        } catch (error) {
+            console.error("Error al cargar las unidades de medida:", error);
+    }
+    };
+    fetchUnidadesMedida();
+  }, [token]);
+
+  useEffect(() => {
     if (categoriaSeleccionada) {
       const fetchSubcategorias = async () => {
         try {
@@ -96,7 +114,7 @@ function CrudProductos() {
         const response = await axios.get(
           filtro === "activo"
             ? "http://localhost:3005/producto/mostrarProductos"
-            : "http://localhost:3005/producto/mostrarProductos?estado=Inactivo",
+            : "http://localhost:3005/producto/mostrarProductosInactivos",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -120,6 +138,7 @@ function CrudProductos() {
         stock: currentProducto.stock,
         nombre_categoria: currentProducto.nombre_categoria,
         subcategoria: currentProducto.subcategoria,
+        estado: currentProducto.estado,
       });
     }
   }, [editOpen, currentProducto, reset]);
@@ -142,7 +161,7 @@ function CrudProductos() {
   const onSubmit = async (data) => {
     const url = editOpen
       ? "http://localhost:3005/producto/modificarProducto"
-      : "http://localhost:3005/producto/agregarProducto";
+      : "http://localhost:3005/producto/AgregarProducto";
 
     try {
       const response = await axios.post(url, data, {
@@ -228,6 +247,7 @@ function CrudProductos() {
               <TableCell>Precio</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Categoría</TableCell>
+              <TableCell>Estado</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -256,6 +276,7 @@ function CrudProductos() {
                 <TableCell>{producto.precio}</TableCell>
                 <TableCell>{producto.stock}</TableCell>
                 <TableCell>{producto.nombre_categoria}</TableCell>
+                <TableCell>{producto.nombreEstado}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -283,6 +304,19 @@ function CrudProductos() {
               )}
             />
             <Controller
+              name="unidad_medida_fk"
+              control={control}
+              render={({ field }) => (
+                <Select {...field} fullWidth>
+                  {unidadesMedida.map((cat) => (
+                    <MenuItem key={cat.idUnidad} value={cat.idUnidad}>
+                      {cat.unidad}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
+            <Controller
               name="precio"
               control={control}
               render={({ field }) => (
@@ -302,7 +336,7 @@ function CrudProductos() {
               render={({ field }) => (
                 <Select {...field} fullWidth>
                   {categorias.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.nombre_categoria}>
+                    <MenuItem key={cat.idCategoria} value={cat.nombre_categoria}>
                       {cat.nombre_categoria}
                     </MenuItem>
                   ))}
@@ -319,7 +353,7 @@ function CrudProductos() {
                     subcategorias.map((sub) => (
                       <MenuItem
                         key={sub.idSubcategoria}
-                        value={sub.subcategoria}
+                        value={sub.idSubcategoria}
                       >
                         {sub.subcategoria}
                       </MenuItem>
@@ -330,6 +364,14 @@ function CrudProductos() {
                     </MenuItem>
                   )}
                 </Select>
+                
+              )}
+            />
+            <Controller
+              name="ruta_img"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="Ruta de imagen" type="text" fullWidth />
               )}
             />
 
