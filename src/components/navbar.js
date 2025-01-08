@@ -26,7 +26,7 @@ const pages = [
 const pagesAdmin = [
   { label: "Productos", href: "/productos" },
   { label: "Categorías", href: "/categorias" },
-  { label: "Administrar producto", href: "/administrar" },
+  { label: "Administrar producto", href: "/productosCrud" },
   { label: "usuarios", href: "/UsuariosAdmin" },
   { label: "pedidos Cliente", href: "/pedidos" },
 ];
