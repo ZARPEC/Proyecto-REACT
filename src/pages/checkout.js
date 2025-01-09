@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Paper,
@@ -11,42 +11,66 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
+import { useForm, Controller } from "react-hook-form";
+import { data } from "react-router-dom";
 
 const CheckoutPage = () => {
   const [cart, setCart] = useState([]); // Estado para el carrito
-  const [shippingInfo, setShippingInfo] = useState({
-    name: "",
-    address: "",
-    city: "",
-    zipCode: "",
-  });
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: "",
-    expirationDate: "",
-    cvv: "",
-  });
 
-  // Cargar el carrito desde sessionStorage
+  // Hook de react-hook-form
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
+  // Cargar datos iniciales en el formulario
   useEffect(() => {
+    setValue(
+      "name",
+      `${localStorage.getItem("nombre")} ${localStorage.getItem("apellido")}`
+    );
     const carritoGuardado = JSON.parse(sessionStorage.getItem("carrito"));
     if (carritoGuardado) {
       setCart(carritoGuardado);
     }
-  }, []); // Este efecto solo se ejecuta una vez cuando el componente se monta
+  }, [setValue]);
 
-  const handleShippingChange = (e) => {
-    setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
-  };
+  // Procesar envío del formulario
+  const onSubmit = async (data) => {
+    console.log("Información de envío y pago:", data);
+    const detalles = cart.map((item) => ({
+      producto_orden: item.id,
+      cantidad: item.cantidad,
+    }));
+    const token = localStorage.getItem("token");
+    const datos = {
+      ...data,
+      detalles,
+      usuario_fk: parseInt(localStorage.getItem("idUsuario")),
+      estado_fk: 4,
+    };
 
-  const handlePaymentChange = (e) => {
-    setPaymentInfo({ ...paymentInfo, [e.target.name]: e.target.value });
-  };
+    console.log("Datos a enviar:", datos);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Información de envío:", shippingInfo);
-    console.log("Información de pago:", paymentInfo);
-    // Aquí iría la lógica para procesar el pago y finalizar la compra
+    try {
+      const response = await fetch("http://localhost:3005/ordenes/agregarOrden", { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(datos),
+      });
+      if (response.ok) {
+        console.log("Orden enviada correctamente");
+        sessionStorage.removeItem("carrito");
+        window.location.href = "/compra-realizada";
+      }
+    } catch (error) {
+      console.error("Error al enviar la orden:", error);
+    }
   };
 
   const total = cart.reduce(
@@ -65,46 +89,74 @@ const CheckoutPage = () => {
             <Typography variant="h6" gutterBottom>
               Información de Envío
             </Typography>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Nombre completo"
+                  <Controller
                     name="name"
-                    value={shippingInfo.name}
-                    onChange={handleShippingChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{ required: "El nombre es obligatorio" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Nombre completo"
+                        fullWidth
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Dirección"
-                    name="address"
-                    value={shippingInfo.address}
-                    onChange={handleShippingChange}
+                  <Controller
+                    name="direccion"
+                    control={control}
+                    defaultValue=""
+                    rules={{ required: "La dirección es obligatoria" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Dirección"
+                        fullWidth
+                        error={!!errors.address}
+                        helperText={errors.address?.message}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Ciudad"
+                  <Controller
                     name="city"
-                    value={shippingInfo.city}
-                    onChange={handleShippingChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{ required: "La ciudad es obligatoria" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Ciudad"
+                        fullWidth
+                        error={!!errors.city}
+                        helperText={errors.city?.message}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Código Postal"
+                  <Controller
                     name="zipCode"
-                    value={shippingInfo.zipCode}
-                    onChange={handleShippingChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{ required: "El código postal es obligatorio" }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Código Postal"
+                        fullWidth
+                        error={!!errors.zipCode}
+                        helperText={errors.zipCode?.message}
+                      />
+                    )}
                   />
                 </Grid>
               </Grid>
@@ -114,33 +166,72 @@ const CheckoutPage = () => {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Número de tarjeta"
+                  <Controller
                     name="cardNumber"
-                    value={paymentInfo.cardNumber}
-                    onChange={handlePaymentChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{
+                      required: "El número de tarjeta es obligatorio",
+                      pattern: {
+                        value: /^\d{16}$/,
+                        message: "El número de tarjeta debe tener 16 dígitos",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Número de tarjeta"
+                        fullWidth
+                        error={!!errors.cardNumber}
+                        helperText={errors.cardNumber?.message}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="Fecha de expiración"
+                  <Controller
                     name="expirationDate"
-                    value={paymentInfo.expirationDate}
-                    onChange={handlePaymentChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{
+                      required: "La fecha de expiración es obligatoria",
+                      pattern: {
+                        value: /^(0[1-9]|1[0-2])\/\d{2}$/,
+                        message: "Formato inválido (MM/AA)",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Fecha de expiración (MM/AA)"
+                        fullWidth
+                        error={!!errors.expirationDate}
+                        helperText={errors.expirationDate?.message}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    required
-                    fullWidth
-                    label="CVV"
+                  <Controller
                     name="cvv"
-                    value={paymentInfo.cvv}
-                    onChange={handlePaymentChange}
+                    control={control}
+                    defaultValue=""
+                    rules={{
+                      required: "El CVV es obligatorio",
+                      pattern: {
+                        value: /^\d{3}$/,
+                        message: "El CVV debe tener 3 dígitos",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="CVV"
+                        fullWidth
+                        error={!!errors.cvv}
+                        helperText={errors.cvv?.message}
+                      />
+                    )}
                   />
                 </Grid>
               </Grid>
