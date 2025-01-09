@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 const pages = [
   { label: "Productos", href: "/productos" },
   { label: "Categorías", href: "/categorias" },
+  { label: "pedidos", href: "/ordenesUsuario" },
   { label: "Sobre Nosotros", href: "/sobre-nosotros" },
 ];
 
@@ -28,7 +29,7 @@ const pagesAdmin = [
   { label: "Categorías", href: "/categorias" },
   { label: "Administrar producto", href: "/productosCrud" },
   { label: "usuarios", href: "/UsuariosAdmin" },
-  { label: "pedidos Cliente", href: "/pedidos" },
+  { label: "pedidos Cliente", href: "/ordenes" },
 ];
 
 const settings = ["Cuenta", "Pedidos", "Cerrar sesión"];
@@ -222,6 +223,7 @@ function Navbar() {
                       }
                       handleCloseUserMenu(); // Cierra el menú después de cualquier acción
                     }}
+                    href={setting ==="Pedidos" ? "/ordenesUsuario" : "/cuenta"}
                   >
                     <Typography sx={{ textAlign: "center" }}>
                       {setting}
