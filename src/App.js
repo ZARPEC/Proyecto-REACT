@@ -10,6 +10,8 @@ import UserManagement from "./pages/usuarios/crudUsuarios.js";
 import ProductTable from "./pages/productos/crudProductos.js";
 import CrudOrdenes from "./pages/ordenesCrud.js";
 import Unauthorized from "./pages/unauthorized.js";
+import CompraRealizada from "./pages/compraRealizada.js";
+import OrdenesUsuario from "./pages/usuarios/ordenesUsuario.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 
@@ -61,6 +63,22 @@ function App() {
             element={
               <PrivateRoute requiredRole="Administrador">
                 <CrudOrdenes />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/compra-realizada"
+            element={
+              <PrivateRoute requiredRole="Cliente">
+                <CompraRealizada />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/ordenesUsuario"
+            element={
+              <PrivateRoute requiredRole="Cliente">
+                <OrdenesUsuario />
               </PrivateRoute>
             }
           />
