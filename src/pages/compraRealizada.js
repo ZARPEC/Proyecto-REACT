@@ -13,7 +13,7 @@ import {
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const CompraRealizada = () => {
-  // Simulación de datos de compra
+  
   const orderDetails = {
     orderId: '',
     total: '',
