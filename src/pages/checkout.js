@@ -15,9 +15,9 @@ import { useForm, Controller } from "react-hook-form";
 import { data } from "react-router-dom";
 
 const CheckoutPage = () => {
-  const [cart, setCart] = useState([]); // Estado para el carrito
+  const [cart, setCart] = useState([]); 
 
-  // Hook de react-hook-form
+  
   const {
     control,
     handleSubmit,
@@ -25,7 +25,6 @@ const CheckoutPage = () => {
     formState: { errors },
   } = useForm();
 
-  // Cargar datos iniciales en el formulario
   useEffect(() => {
     setValue(
       "name",
@@ -37,7 +36,7 @@ const CheckoutPage = () => {
     }
   }, [setValue]);
 
-  // Procesar envío del formulario
+  
   const onSubmit = async (data) => {
     console.log("Información de envío y pago:", data);
     const detalles = cart.map((item) => ({
