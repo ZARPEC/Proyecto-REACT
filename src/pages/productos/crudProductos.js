@@ -49,7 +49,11 @@ function CrudProductos() {
     },
   });
 
-  const categoriaSeleccionada = watch("nombre_categoria");
+  const categoriaId = watch("nombre_categoria");
+
+  const categoriaSeleccionada = categorias.find(
+    (cat) => cat.idCategoria === categoriaId
+  );
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -71,27 +75,28 @@ function CrudProductos() {
 
   useEffect(() => {
     const fetchUnidadesMedida = async () => {
-        try {
-            const response = await axios.get(
-            "http://localhost:3005/unidadmedida/mostrarUnidadMedida",
-            {
-                headers: { Authorization: `Bearer ${token}` },
-            }
-            );
-            setUnidadesMedida(response.data);
-        } catch (error) {
-            console.error("Error al cargar las unidades de medida:", error);
-    }
+      try {
+        const response = await axios.get(
+          "http://localhost:3005/unidadmedida/mostrarUnidadMedida",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setUnidadesMedida(response.data);
+      } catch (error) {
+        console.error("Error al cargar las unidades de medida:", error);
+      }
     };
     fetchUnidadesMedida();
   }, [token]);
 
   useEffect(() => {
     if (categoriaSeleccionada) {
+      console.log(categoriaSeleccionada.nombre_categoria);
       const fetchSubcategorias = async () => {
         try {
           const response = await axios.get(
-            `http://localhost:3005/categoria/mostrarSubCategorias?categoria=${categoriaSeleccionada}`,
+            `http://localhost:3005/categoria/mostrarSubCategorias?categoria=${categoriaSeleccionada.nombre_categoria}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -126,7 +131,7 @@ function CrudProductos() {
     };
 
     fetchProductos();
-  }, [filtro, token]);
+  }, [filtro, token, currentProducto, editOpen, open]);
 
   useEffect(() => {
     if (editOpen && currentProducto) {
@@ -136,15 +141,25 @@ function CrudProductos() {
         cantidad_medida: currentProducto.cantidad_medida,
         precio: currentProducto.precio,
         stock: currentProducto.stock,
-        nombre_categoria: currentProducto.nombre_categoria,
-        subcategoria: currentProducto.subcategoria,
+        nombre_categoria: currentProducto.idCategoria,
+        subcategoria: currentProducto.idSubcategoria,
         estado: currentProducto.estado,
       });
     }
   }, [editOpen, currentProducto, reset]);
 
   const handleClickOpen = () => {
-    reset();
+    reset({
+      idProducto: "",
+      nombre_producto: "",
+      cantidad_medida: "",
+      precio: "",
+      stock: "",
+      nombre_categoria: "",
+      subcategoria: "",
+      unidad_medida_fk: "",
+      ruta_img: "",
+    });
     setOpen(true);
     setEditOpen(false);
   };
@@ -164,16 +179,25 @@ function CrudProductos() {
       : "http://localhost:3005/producto/AgregarProducto";
 
     try {
-      const response = await axios.post(url, data, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
       });
 
-      const updatedProducto = response.data;
+      if (!response.ok) {
+        throw new Error(`Error al ${editOpen ? "editar" : "crear"} producto.`);
+      }
+
+      const updatedProducto = await response.json();
 
       if (editOpen) {
         setProductos((prev) =>
           prev.map((producto) =>
-            producto.idProducto === updatedProducto.idProducto
+            producto.idProducto === updatedProducto.id
               ? updatedProducto
               : producto
           )
@@ -272,11 +296,11 @@ function CrudProductos() {
                   </IconButton>
                 </TableCell>
                 <TableCell>{producto.nombre_producto}</TableCell>
-                <TableCell>{producto.subcategoria}</TableCell>
+                <TableCell>{producto.nombreSubcategoria}</TableCell>
                 <TableCell>{producto.precio}</TableCell>
                 <TableCell>{producto.stock}</TableCell>
-                <TableCell>{producto.nombre_categoria}</TableCell>
-                <TableCell>{producto.nombreEstado}</TableCell>
+                <TableCell>{producto.nombreCategoria}</TableCell>
+                <TableCell>{producto.estado}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -336,7 +360,7 @@ function CrudProductos() {
               render={({ field }) => (
                 <Select {...field} fullWidth>
                   {categorias.map((cat) => (
-                    <MenuItem key={cat.idCategoria} value={cat.nombre_categoria}>
+                    <MenuItem key={cat.idCategoria} value={cat.idCategoria}>
                       {cat.nombre_categoria}
                     </MenuItem>
                   ))}
@@ -364,14 +388,18 @@ function CrudProductos() {
                     </MenuItem>
                   )}
                 </Select>
-                
               )}
             />
             <Controller
               name="ruta_img"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Ruta de imagen" type="text" fullWidth />
+                <TextField
+                  {...field}
+                  label="Ruta de imagen"
+                  type="text"
+                  fullWidth
+                />
               )}
             />
 
