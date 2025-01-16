@@ -10,13 +10,13 @@ const PrivateRoute = ({ children, requiredRole }) => {
     return <div>Cargando...</div>;
   }
 
-  // Si no está autenticado, guardar la ruta previa antes de redirigir
+  
   if (!isAuthenticated) {
-    setPreviousPath(location.pathname); // Guardar la ruta actual
+    setPreviousPath(location.pathname); 
     return <Navigate to="/unauthorized" />;
   }
 
-  // Verificar rol si es necesario
+
   if (requiredRole && requiredRole !== role) {
     return <Navigate to="/unauthorized" />;
   }
