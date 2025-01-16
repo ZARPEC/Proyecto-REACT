@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import { useForm } from "react-hook-form";
 import EmailIcon from "@mui/icons-material/Email";
@@ -7,15 +7,13 @@ import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Button from "@mui/material/Button";
 import LoginIcon from "@mui/icons-material/Login";
+import { Snackbar, Alert } from "@mui/material";
+
 import { AuthContext } from "../context/AuthContext";
 
-// Creamos componentes wrapper para los iconos
 
 
 function LoginForm() {
-
-
-
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -23,12 +21,28 @@ function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
+  const [state, setState] = useState({
+    open: false,
+    vertical: "top",
+    horizontal: "center",
+    message: "Inicio de sesión exitoso",
+    severity: "success",
+  });
+  const { open, vertical, horizontal, message, severity } = state;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  const handleClick = (newState) => {
+    setState({ ...newState, open: true });
+  };
+  
+  const handleClose = () => {
+    setState({ ...state, open: false });
+  };
 
   const loginSubmit = async (formData) => {
     console.log(formData);
@@ -37,14 +51,52 @@ function LoginForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
-    if (response.ok) {
-      const data = await response.json();
-      const token = data.token;
-      login(token);
-      localStorage.setItem("token", token);
-      console.log(token);
-    } else {
-      console.error("Error en la petición");
+    switch (response.status) {
+      case 200: // OK
+        const data = await response.json();
+        const token = data.token;
+        login(token);
+        localStorage.setItem("token", token);
+        console.log(token);
+        break;
+
+      case 401: // contraseña incorrecta
+        console.error("Contraseña incorrecta");
+        handleClick({
+          vertical: "top",
+          horizontal: "center",
+          message: "Contraseña incorrecta, Verifique e intente de nuevo",
+          severity: "warning",
+        });
+        break;
+
+      case 403: // usuario inactivo
+        console.error("Usuario inactivo");
+        handleClick({
+          vertical: "top",
+          horizontal: "center",
+          message: "usuario inactivo, contacte al administrador",
+          severity: "info",
+        });
+        break;
+
+      case 404: // no se encontro el usuario
+        console.error("Solicitud incorrecta: Usuario no encontrado ");
+        handleClick({
+          vertical: "top",
+          horizontal: "center",
+          message: "Correo no encontrado, Verifique e intente de nuevo",
+          severity: "error",
+        });
+        break;
+
+      case 500: //error de servidor
+        console.error("Error interno del servidor");
+        break;
+
+      default: // Otros códigos
+        console.error("Error inesperado: " + response.status);
+        break;
     }
   };
 
@@ -141,12 +193,21 @@ function LoginForm() {
             <span>Iniciar Sesión</span>
           </button>
 
-          <p className="text-center text-gray-600 text-sm">
-            ¿No tienes una cuenta?{" "}
-            <a href="#" className="text-blue-500 hover:text-blue-600">
-              Regístrate
-            </a>
-          </p>
+          <Snackbar
+            open={open}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            anchorOrigin={{ vertical, horizontal }}
+          >
+            <Alert
+              onClose={handleClose}
+              severity={severity}
+              variant="filled"
+              sx={{ width: "100%" }}
+            >
+              {message}
+            </Alert>
+          </Snackbar>
         </form>
       </div>
     </div>
