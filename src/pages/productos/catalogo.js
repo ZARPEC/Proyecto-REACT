@@ -34,7 +34,7 @@ const CatalogoProdutos = () => {
   );
 
   const [open, setOpen] = React.useState(false);
-  const [productoAgregado, setProductoAgregado] = useState(null); // Nuevo estado
+  const [productoAgregado, setProductoAgregado] = useState(null); 
 
   const handleClick = () => {
     setOpen(true);
@@ -48,13 +48,13 @@ const CatalogoProdutos = () => {
     setOpen(false);
   };
 
-  // Función para guardar el carrito en sessionStorage
+  
   const guardarCarrito = (nuevoCarrito) => {
     sessionStorage.setItem("carrito", JSON.stringify(nuevoCarrito));
     setCarrito(nuevoCarrito);
   };
 
-  // Función para agregar al carrito
+
   const agregarAlCarrito = (producto) => {
     const existeProducto = carrito.find((item) => item.id === producto.id);
     let nuevoCarrito;
@@ -70,7 +70,7 @@ const CatalogoProdutos = () => {
     }
 
     guardarCarrito(nuevoCarrito);
-    setProductoAgregado(producto.nombre); // Establecer el nombre del producto
+    setProductoAgregado(producto.nombre); 
     handleClick();
   };
 
@@ -136,7 +136,7 @@ const CatalogoProdutos = () => {
           id: producto.idProducto,
           nombre: producto.nombre_producto,
           precio: producto.precio,
-          imagen: "/logo192.png", //producto.ruta_img
+          imagen: "/logo192.png",
         }));
 
         const categoriasmap = categoriasData.map(
@@ -162,7 +162,7 @@ const CatalogoProdutos = () => {
 
   const handleCategoriaClick = (categoria) => {
     setCategoriaSeleccionada(categoria);
-    setSubcategoriaSeleccionada(undefined); // Restablece la subcategoría seleccionada
+    setSubcategoriaSeleccionada(undefined); 
   };
 
   const handleSubcategoriaClick = (subcategoria) => {
@@ -277,7 +277,7 @@ const CatalogoProdutos = () => {
                   sx={{
                     maxHeight: 150,
                     width: "auto",
-                    margin: "0 auto", // Centra la imagen si es más pequeña
+                    margin: "0 auto", 
                     display: "block",
                   }}
                   image={card.imagen}
