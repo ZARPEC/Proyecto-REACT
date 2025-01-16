@@ -23,7 +23,6 @@ const CarritoDeCompras = () => {
   const theme = useTheme();
   const [cantidadProductos, setCantidadProductos] = useState(0);
 
-  // Cargar carrito desde sessionStorage solo al montar el componente
   useEffect(() => {
     const carritoGuardado = JSON.parse(sessionStorage.getItem("carrito"));
     if (carritoGuardado) {
@@ -55,7 +54,7 @@ const CarritoDeCompras = () => {
     }
   }, [cantidadProductos, items]);
 
-  // Guardar carrito en sessionStorage
+ 
   const guardarCarrito = (nuevoCarrito) => {
     sessionStorage.setItem("carrito", JSON.stringify(nuevoCarrito));
   };
@@ -67,18 +66,18 @@ const CarritoDeCompras = () => {
           ? { ...item, cantidad: Math.max(0, item.cantidad + cambio) }
           : item
       )
-      .filter((item) => item.cantidad > 0); // Filtrar items con cantidad > 0
+      .filter((item) => item.cantidad > 0); 
 
-    setItems(nuevosItems); // Actualizar estado
-    guardarCarrito(nuevosItems); // Guardar en sessionStorage
+    setItems(nuevosItems); 
+    guardarCarrito(nuevosItems); 
   };
 
   const eliminarProducto = (id) => {
-    // Filtrar los productos eliminados
+   
     const nuevosItems = items.filter((item) => item.id !== id);
 
-    setItems(nuevosItems); // Actualizar el estado con los productos restantes
-    guardarCarrito(nuevosItems); // Guardar el nuevo estado en sessionStorage
+    setItems(nuevosItems); 
+    guardarCarrito(nuevosItems); 
   };
 
   const vaciarCarrito = () => {
