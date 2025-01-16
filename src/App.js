@@ -1,4 +1,4 @@
-import React from "react";
+import { React, useContext } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import PagPrueba from "./pages/Pueba.js";
 import LoginForm from "./pages/login.js";
@@ -12,10 +12,14 @@ import CrudOrdenes from "./pages/ordenesCrud.js";
 import Unauthorized from "./pages/unauthorized.js";
 import CompraRealizada from "./pages/compraRealizada.js";
 import OrdenesUsuario from "./pages/usuarios/ordenesUsuario.js";
-import { AuthProvider } from "./context/AuthContext.jsx";
+import { AuthProvider, AuthContext } from "./context/AuthContext.jsx";
 import PrivateRoute from "./routes/PrivateRoute.jsx";
 
+const rol = localStorage.getItem("rol");
+
 function App() {
+  const { isAuthenticated } = useContext(AuthContext);
+
   return (
     <AuthProvider>
       <Router>
@@ -23,9 +27,19 @@ function App() {
           <Route
             path="/"
             element={
-              <PrivateRoute>
-                <PagPrueba />
-              </PrivateRoute>
+              isAuthenticated ? (
+                rol == "Cliente" ? (
+                  <PrivateRoute>
+                    <Productos />{" "}
+                  </PrivateRoute>
+                ) : (
+                  <PrivateRoute>
+                    <CrudOrdenes />
+                  </PrivateRoute>
+                )
+              ) : (
+                <LoginForm />
+              )
             }
           />
           <Route path="/login" element={<LoginForm />} />
