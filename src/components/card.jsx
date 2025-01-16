@@ -35,11 +35,11 @@ function SelectActionCard({
               },
             }}
           >
-            {/* Agregar la imagen con CardMedia */}
+      
             {card.image && (
               <CardMedia
                 component="img"
-                height="50%" // Ajusta la altura según sea necesario
+                height="50%" 
                 image={card.image}
                 alt={card.title}
               />
