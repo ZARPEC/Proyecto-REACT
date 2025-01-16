@@ -6,7 +6,7 @@ const Unauthorized = () => {
   const navigate = useNavigate();
 
   const handleGoHome = () => {
-    navigate("/"); // Redirige al inicio o cualquier ruta que desees
+    navigate("/"); 
   };
 
   return (
