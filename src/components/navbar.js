@@ -14,7 +14,7 @@ import Tooltip from "@mui/material/Tooltip";
 import StoreIcon from "@mui/icons-material/Store";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link } from "@mui/material";
-import { AuthContext } from "../context/AuthContext"; // Ajusta el path según tu estructura
+import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const pages = [
@@ -38,12 +38,12 @@ function Navbar() {
   const { isAuthenticated, logout } = useContext(AuthContext);
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const [requiredRole, setRequiredRole] = useState(null); // Estado para el rol
+  const [requiredRole, setRequiredRole] = useState(null);
 
-  // Obtener el rol de localStorage
+  
   useEffect(() => {
-    const role = localStorage.getItem("rol"); // Suponiendo que el rol está guardado con el nombre "rol"
-    setRequiredRole(role); // Establece el rol en el estado
+    const role = localStorage.getItem("rol"); 
+    setRequiredRole(role); 
   }, []);
 
   const handleOpenNavMenu = (event) => {
@@ -64,7 +64,7 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    localStorage.removeItem("rol"); // Puedes eliminar el rol de localStorage al cerrar sesión
+    localStorage.removeItem("rol");
   };
 
   return (
@@ -195,7 +195,7 @@ function Navbar() {
               </Button>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  <Avatar alt={localStorage.getItem("nombre"+"apellido")} src="/static/images/avatar/2.jpg" />
                 </IconButton>
               </Tooltip>
               <Menu
@@ -219,9 +219,9 @@ function Navbar() {
                     key={setting}
                     onClick={() => {
                       if (setting === "Cerrar sesión") {
-                        handleLogout(); // Llama a la función de logout si es "Logout"
+                        handleLogout(); 
                       }
-                      handleCloseUserMenu(); // Cierra el menú después de cualquier acción
+                      handleCloseUserMenu(); 
                     }}
                     href={setting ==="Pedidos" ? "/ordenesUsuario" : "/cuenta"}
                   >
