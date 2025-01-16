@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [apellido, setApellido] = useState(null);
   const [idUsuario, setIdUsuario] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [previousPath, setPreviousPath] = useState(null); // Estado para la ruta previa
+  const [previousPath, setPreviousPath] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         login,
         logout,
-        setPreviousPath, // Exponer la función para guardar la ruta previa
+        setPreviousPath,
       }}
     >
       {children}
