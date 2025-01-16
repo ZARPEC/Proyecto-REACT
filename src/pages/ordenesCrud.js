@@ -18,7 +18,11 @@ import {
   MenuItem,
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import DoneOutlineIcon from "@mui/icons-material/DoneOutline";
+import BlockIcon from "@mui/icons-material/Block";
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import { set } from "react-hook-form";
 const initialFormState = {
   idorden: "",
   usuario: "",
@@ -28,16 +32,18 @@ const initialFormState = {
 const CrudOrdenes = () => {
   const [ordenes, setOrdenes] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpenDetalles, setDialogOpenDetalles] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState(initialFormState);
   const [usuarios, setUsuario] = useState([]);
   const [filtro, setFiltro] = useState("pendiente");
+  const [idOrden, setIdOrden] = useState(0);
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchOrdenes();
-  }, [filtro,token]);
+  }, [filtro, token]);
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -56,12 +62,13 @@ const CrudOrdenes = () => {
   }, [token]);
 
   const fetchOrdenes = async () => {
-    
     try {
       const response = await axios.get(
-        filtro === "entregada"?
-        "http://localhost:3005/ordenes/mostrarOrdenes":
-        "http://localhost:3005/ordenes/mostrarOrdenesPendientes",
+        filtro === "entregada"
+          ? "http://localhost:3005/ordenes/mostrarOrdenes?estado=entregado"
+          :filtro === "Rechazado"
+          ? "http://localhost:3005/ordenes/mostrarOrdenes?estado=Rechazado" 
+          : "http://localhost:3005/ordenes/mostrarOrdenes?estado=Pendiente",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOrdenes(response.data);
@@ -74,19 +81,37 @@ const CrudOrdenes = () => {
     setFiltro(nuevoFiltro);
   };
 
+const handleRechazar = async (idorden) => {
+  try {
+    const estado = filtro === "Rechazado" ? 4 : 2;
+    await axios.post(
+      "http://localhost:3005/ordenes/modificarEstadoOrden",
+      { idorden, estado_fk: estado },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    fetchOrdenes();
+  } catch (error) {
+    console.error("Error al rechazar la orden:", error.response || error);
+  }
+}
+
   const handleDelete = async (idorden) => {
-    const estado = filtro === "entregada" ? 4 : 7;
+    const estado = filtro === "pendiente" ? 7 : 4;
     try {
       await axios.post(
         "http://localhost:3005/ordenes/modificarEstadoOrden",
         { idorden, estado_fk: estado },
         {
-             headers: { Authorization: `Bearer ${token}` },}
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       fetchOrdenes();
     } catch (error) {
-      console.error("Error al eliminar la orden:",error.response|| error);
+      console.error("Error al eliminar la orden:", error.response || error);
     }
   };
 
@@ -94,6 +119,11 @@ const CrudOrdenes = () => {
     const { name, value } = e.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
+
+  const ordenesUnicas = ordenes.filter(
+    (orden, index, self) =>
+      index === self.findIndex((o) => o.idorden === orden.idorden)
+  );
 
   const handleOpenDialog = (orden = null) => {
     setEditMode(!!orden);
@@ -104,6 +134,15 @@ const CrudOrdenes = () => {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setFormData(initialFormState);
+  };
+
+  const handleCloseDialogDetalles = () => {
+    setDialogOpenDetalles(false);
+  };
+
+  const handleOpenDialogDetalles = (idOrden) => {
+    setDialogOpenDetalles(true);
+    setIdOrden(idOrden);
   };
 
   const handleSubmit = async () => {
@@ -149,6 +188,17 @@ const CrudOrdenes = () => {
       >
         Ordenes Entregadas
       </Button>
+      <Button variant="contained" color="error" onClick={()=> handleFiltro("Rechazado")}
+      style={{ marginBottom: "20px", marginRight: "20px" }}
+      >
+        Ordenes Rechazadas
+      </Button>
+
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: "30px" }}>
+          {filtro ==="pendiente" ? "Ordenes Pendientes" : filtro === "entregada" ? "Ordenes Entregadas" : "Ordenes Rechazadas"}
+        </p>
+      </div>
 
       <TableContainer component={Paper} style={{ marginTop: "20px" }}>
         <Table>
@@ -157,14 +207,14 @@ const CrudOrdenes = () => {
               <TableCell>Acciones</TableCell>
               <TableCell>ID</TableCell>
               <TableCell>Cliente</TableCell>
-              <TableCell>Producto</TableCell>
-              <TableCell>Total</TableCell>
+              <TableCell>Detalles</TableCell>
+              <TableCell>Direccion</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Fecha</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {ordenes.map((orden) => (
+            {ordenesUnicas.map((orden) => (
               <TableRow key={orden.idorden}>
                 <TableCell>
                   <IconButton
@@ -174,17 +224,30 @@ const CrudOrdenes = () => {
                     <EditIcon color="primary" />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(orden.idorden)}>
-                    {filtro === "entregada" ? (
-                      <DeleteIcon color="error" />
+                    {filtro === "pendiente" ? (
+                       <DoneOutlineIcon color="success" />
                     ) : (
-                      <DoneOutlineIcon color="success" />
+                      <PendingActionsIcon color="warning" />
+                     
                     )}
                   </IconButton>
+                  {filtro === "pendiente" ? (
+                    <IconButton onClick={() => handleRechazar(orden.idorden)}>
+                      <BlockIcon color="error" />
+                    </IconButton>
+                  ) : null}
                 </TableCell>
                 <TableCell>{orden.idorden}</TableCell>
                 <TableCell>{`${orden.nombre} ${orden.apellido}`}</TableCell>
-                <TableCell>{orden.productos}</TableCell>
-                <TableCell>{orden.total}</TableCell>
+                <TableCell>
+                  <Button
+                    onClick={() => handleOpenDialogDetalles(orden.idorden)}
+                  >
+                    <ReceiptLongIcon />
+                    Detalles
+                  </Button>
+                </TableCell>
+                <TableCell>{orden.direccion}</TableCell>
                 <TableCell>{orden.nombreEstado}</TableCell>
                 <TableCell>
                   {new Date(orden.fecha_orden).toLocaleDateString()}
@@ -229,7 +292,7 @@ const CrudOrdenes = () => {
             fullWidth
             margin="dense"
           >
-            {/* Verificamos si 'usuarios' está definido y es un array */}
+            
             {Array.isArray(usuarios) && usuarios.length > 0 ? (
               usuarios.map((usuario) => (
                 <MenuItem key={usuario.idUsuario} value={usuario.idUsuario}>
@@ -248,6 +311,57 @@ const CrudOrdenes = () => {
           <Button onClick={handleSubmit} color="primary">
             {editMode ? "Guardar Cambios" : "Crear Orden"}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={dialogOpenDetalles}
+        onClose={handleCloseDialogDetalles}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Detalles de la Orden</DialogTitle>
+        <DialogContent>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Producto</TableCell>
+                  <TableCell>Cantidad</TableCell>
+                  <TableCell>Precio</TableCell>
+                  <TableCell>Total</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {ordenes
+                  .filter((orden) => orden.idorden === idOrden)
+                  .map((orden) => (
+                    <TableRow key={orden.idorden}>
+                      <TableCell>{orden.producto}</TableCell>
+                      <TableCell>{orden.cantidad}</TableCell>
+                      <TableCell>{orden.precio}</TableCell>
+                      <TableCell>{orden.total}</TableCell>
+                    </TableRow>
+                  ))}
+
+                <TableRow>
+                  <TableCell rowSpan={3} />
+                  <TableCell colSpan={2}>Total Detalles</TableCell>
+                  <TableCell align="right">
+                    Q
+                    {ordenes
+                      .filter((orden) => orden.idorden === idOrden)
+                      .reduce((total, orden) => total + orden.total, 0)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialogDetalles} color="primary">
+            Cerrar
+          </Button>
+          {filtro === "pendiente" ? <Button>rechazar Orden</Button> : null}
         </DialogActions>
       </Dialog>
     </div>
