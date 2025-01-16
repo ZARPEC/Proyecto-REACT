@@ -28,31 +28,30 @@ function Categorias() {
         }
 
         const data = await response.json();
-        // Mapear las categorías al formato esperado por `cards`
+   
         const mappedCards = data.map((category) => ({
-          title: category.nombre_categoria, // Ajusta según la estructura de tu API
+          title: category.nombre_categoria, 
           image: "logo192.png",
 
-          // Ajusta según la estructura de tu API
+         
         }));
         setCards(mappedCards);
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
-        setLoading(false); // Indica que la carga terminó
+        setLoading(false); 
       }
     };
 
     fetchCategories();
-  }, [token]); // Dependencia del token (si cambia, vuelve a ejecutar el efecto)
+  }, [token]); 
 
-  // Manejador de selección de tarjeta
+
   const handleCardSelect = (index) => {
     setSelectedCard(index);
     console.log(`Selected card: ${index}`);
   };
 
-  // Mostrar mensaje de carga mientras se obtienen los datos
   if (loading) {
     return (
       <Box
@@ -75,7 +74,7 @@ function Categorias() {
     ); 
   }
 
-  // Renderizar componente
+  
   return (
     <div style={{ display: "flex", justifyContent: "center", flexDirection: "row", height: "100%",flexWrap: "wrap" }}>
     <SelectActionCard 
