@@ -49,8 +49,19 @@ function CrudUsuarios() {
   });
   // Manejo de apertura y cierre de diálogos
   const handleClickOpen = () => {
-   reset();
+    reset({
+      idUsuario: "",
+      rol: "",
+      estado: "",
+      email: "",
+      pass: "",
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      nacimiento:"",
+    });
     setOpen(true);
+    setEditOpen(false);
   };
 
   const handleClose = () => {
@@ -58,7 +69,6 @@ function CrudUsuarios() {
     setEditOpen(false);
   };
 
-  
   const handlefiltro = (filtro) => {
     setFiltro(filtro);
   };
@@ -87,7 +97,7 @@ function CrudUsuarios() {
       if (editOpen) {
         setUsers(
           users.map((user) =>
-            user.idUsuario === updatedUser.idUsuario ? updatedUser : user
+            user.idUsuario === updatedUser.id ? updatedUser : user
           )
         );
       } else {
@@ -138,6 +148,9 @@ function CrudUsuarios() {
         nacimiento: currentUser.nacimiento,
       });
     }
+  }, [editOpen, currentUser, reset]);
+
+  useEffect(() => {
     const fetchData = async () => {
       var url = "";
       if (filtro === "activo") {
@@ -172,6 +185,7 @@ function CrudUsuarios() {
 
         const data = await responseClientes.json();
         const datarol = await responseRol.json();
+        console.log(data);
         setUsers(data);
         setRoles(datarol);
       } catch (error) {
@@ -179,7 +193,7 @@ function CrudUsuarios() {
       }
     };
     fetchData();
-  }, [token, filtro, currentUser,editOpen]);
+  }, [token, filtro, currentUser, editOpen, open]);
 
   return (
     <div
@@ -262,8 +276,8 @@ function CrudUsuarios() {
                   <TableCell>{user.apellido}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.telefono}</TableCell>
-                  <TableCell>{user.nombreRol}</TableCell>
-                  <TableCell>{user.nombreEstado}</TableCell>
+                  <TableCell>{user.rolfk?.nombreRol || "Sin rol"}</TableCell>
+                  <TableCell>{user.estadofk?.nombreEstado||"desconocido"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -272,83 +286,85 @@ function CrudUsuarios() {
 
         {/* Diálogo para crear/editar usuarios */}
         <Dialog open={open || editOpen} onClose={handleClose}>
-        <DialogTitle>{editOpen ? "Editar Usuario" : "Crear Usuario"}</DialogTitle>
-        <DialogContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Controller
-              name="nombre"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} label="Nombre" fullWidth />
-              )}
-            />
-            <Controller
-              name="apellido"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} label="Apellido" fullWidth />
-              )}
-            />
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} label="Email" fullWidth/>
-              )}
-            />
-            <Controller
-              name="pass"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Contraseña"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                />
-              )}
-            />
-            <Controller
-              name="telefono"
-              control={control}
-              render={({ field }) => (
-                <TextField {...field} label="Teléfono" fullWidth/>
-              )}
-            />
-            <Controller
-              name="rol"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} fullWidth>
-                  {roles.map((rol) => (
-                    <MenuItem key={rol.idRol} value={rol.idRol}>
-                      {rol.nombreRol}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            <Controller
-              name="nacimiento"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Fecha de Nacimiento"
-                  type="date"
-                  fullWidth
-                />
-              )}
-            />
-            <DialogActions>
-              <Button onClick={handleClose}>Cancelar</Button>
-              <Button type="submit" color="primary">
-                {editOpen ? "Guardar" : "Crear"}
-              </Button>
-            </DialogActions>
-          </form>
-        </DialogContent>
-      </Dialog>
+          <DialogTitle>
+            {editOpen ? "Editar Usuario" : "Crear Usuario"}
+          </DialogTitle>
+          <DialogContent>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Controller
+                name="nombre"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} label="Nombre" fullWidth />
+                )}
+              />
+              <Controller
+                name="apellido"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} label="Apellido" fullWidth />
+                )}
+              />
+              <Controller
+                name="email"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} label="Email" fullWidth />
+                )}
+              />
+              <Controller
+                name="pass"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Contraseña"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                  />
+                )}
+              />
+              <Controller
+                name="telefono"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} label="Teléfono" fullWidth />
+                )}
+              />
+              <Controller
+                name="rol"
+                control={control}
+                render={({ field }) => (
+                  <Select {...field} fullWidth>
+                    {roles.map((rol) => (
+                      <MenuItem key={rol.idRol} value={rol.idRol}>
+                        {rol.nombreRol}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              <Controller
+                name="nacimiento"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Fecha de Nacimiento"
+                    type="date"
+                    fullWidth
+                  />
+                )}
+              />
+              <DialogActions>
+                <Button onClick={handleClose}>Cancelar</Button>
+                <Button type="submit" color="primary">
+                  {editOpen ? "Guardar" : "Crear"}
+                </Button>
+              </DialogActions>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
