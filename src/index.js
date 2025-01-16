@@ -1,23 +1,31 @@
-import React from "react";
+import React, { useContext } from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import Navbar from "./components/navbar";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+
+const NavbarContainer = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+
+  return isAuthenticated ? <Navbar /> : null;
+};
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <AuthProvider>
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  </AuthProvider>
 );
 
 const navbarRoot = ReactDOM.createRoot(document.getElementById("navbar"));
 navbarRoot.render(
   <AuthProvider>
     <React.StrictMode>
-      <Navbar />
+      <NavbarContainer />
     </React.StrictMode>
   </AuthProvider>
 );
